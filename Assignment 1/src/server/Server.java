@@ -4,6 +4,7 @@ import java.net.*;
 import java.io.*;
 
 public class Server {
+    // initialization of server components
     private Socket socket;
     private ServerSocket server;
     private BufferedReader input;
@@ -11,39 +12,72 @@ public class Server {
 
     public Server(int port) {
         try {
+            // creating server socket for connection
             server = new ServerSocket(port);
 
             System.out.println("Server is running...");
             System.out.println("Waiting for client connection...");
 
+            // connect client to server
             socket = server.accept();
             System.out.println("Client Connected");
 
+            // create input and output streams for server
             input = new BufferedReader(
                     new InputStreamReader(socket.getInputStream())
             );
 
             output = new PrintWriter(socket.getOutputStream(), true);
 
+            // user input and server response initialization
             String userInput;
             String serverResponse;
 
+            // request processing time (NOVEL FEATURE)
+            double duration = -1.0;
+
+            // string explaining time taken to finish task
+            String time = "";
+
+            // initial server prompt to client
             serverResponse = "Hello! Welcome to Quadratic Equation Solver!" +
                     "Please enter a, b, and c, coefficients separated by a comma(',')";
             output.println(serverResponse);
 
             while((userInput = input.readLine()) != null) {
+                // connection termination check
                 if(userInput.equals("bye")) {
                     break;
                 }
 
+                // start time of processing request
+                double startTime = System.currentTimeMillis();
+
+                // breaks users input into data
                 int[] coefficients = parseInput(userInput);
 
                 serverResponse = calculateRoots(coefficients);
+
+                // end time for processing request
+                double endTime = System.currentTimeMillis();
+
+                // find out how long the current request compares to the last one
+                if (duration == -1.0) {
+                    duration = endTime - startTime;
+                } else if (duration > endTime - startTime) {
+                    time = "(This request took less time than the last one!)";
+                } else if (duration == endTime - startTime) {
+                    time = "(This request took equal amount of time as the last one!)";
+                } else {
+                    time = "(This request took longer than the last one!)";
+                }
+
+                // output to client on result
                 output.println(serverResponse + "If you want to try another problem you can enter another set of coefficients"
-                        + "Or say 'bye' to terminate the session");
+                        + "Or say 'bye' to terminate the session. " + time);
             }
 
+            // end of connection details
             output.println("Goodbye. :) Ending Connection...");
             System.out.println("Ending Connection...");
             socket.close();
@@ -54,6 +88,7 @@ public class Server {
         }
     }
 
+    // method for parsing a comma delimited string for further use
     private int[] parseInput(String userInput) {
         String[] values = userInput.split(",");
         int[] result = new int[3];
@@ -65,6 +100,7 @@ public class Server {
         return result;
     }
 
+    // method for calculating quadratic roots (SERVICE)
     public String calculateRoots(int[] coefficients) {
         String result;
 
