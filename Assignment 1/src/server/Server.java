@@ -25,19 +25,26 @@ public class Server {
 
             output = new PrintWriter(socket.getOutputStream(), true);
 
-            String in, out;
+            String userInput;
+            String serverResponse;
 
-            out = "YEP response from server";
-            output.println(out);
+            serverResponse = "Hello! Welcome to Quadratic Equation Solver!" +
+                    "Please enter a, b, and c, coefficients separated by a comma(',')";
+            output.println(serverResponse);
 
-            while((in = input.readLine()) != null) {
-                if(in.equals("bye")) {
+            while((userInput = input.readLine()) != null) {
+                if(userInput.equals("bye")) {
                     break;
                 }
-                out = "response from server changed in loop";
-                output.println(out);
 
+                int[] coefficients = parseInput(userInput);
+
+                serverResponse = calculateRoots(coefficients);
+                output.println(serverResponse + "If you want to try another problem you can enter another set of coefficients"
+                        + "Or say 'bye' to terminate the session");
             }
+
+            output.println("Goodbye. :) Ending Connection...");
             System.out.println("Ending Connection...");
             socket.close();
             input.close();
@@ -45,6 +52,43 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private int[] parseInput(String userInput) {
+        String[] values = userInput.split(",");
+        int[] result = new int[3];
+
+        for (int i = 0; i < values.length; i++) {
+            result[i] = Integer.parseInt(values[i]);
+        }
+
+        return result;
+    }
+
+    public String calculateRoots(int[] coefficients) {
+        String result;
+
+        int a = coefficients[0];
+        int b = coefficients[1];
+        int c = coefficients[2];
+
+        // calculate determinant of roots
+        double determinant = Math.pow(b, 2) - 4 * a * c;
+
+        // based on determinant find the roots of the equation
+        if (determinant < 0) {
+            result = "There are no roots because the determinant is less than 0.";
+        } else if(determinant == 0) {
+            double root = Math.round((-b / (2 * a)) * 100.0) / 100.0;
+            result = "Since determinant is 0, there is only 1 root. The root is " + root + ".";
+        } else {
+            double root1 = Math.round((-b + Math.sqrt(determinant)) * 100.0) / 100.0;
+            double root2 = Math.round((-b - Math.sqrt(determinant)) * 100.0) / 100.0;
+
+            result = "There are 2 roots. There 2 roots are " + root1 + " and " + root2 + ".";
+        }
+
+        return result;
     }
 
     public static void main(String args[]) {
